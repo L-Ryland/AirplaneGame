@@ -1,0 +1,2 @@
+[bundle.packages]
+# If you're bundling packages that do not actually live in a `node_modules` folder or do not have the full package name in the file path, you can pass this to bundle them anyway

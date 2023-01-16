@@ -1,0 +1,23 @@
+{
+  "name": "threejs-exercise",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/lodash": "^4.14.191",
+    "@types/three": "^0.147.1",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "@types/node": "^18.11.18",
+    "lodash": "^4.17.21",
+    "three": "^0.148.0"
+  }
+}

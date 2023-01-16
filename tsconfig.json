@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "outDir": "./build/",
+    "lib": [
+      "ESNext", "DOM"
+    ],
+    "module": "ESNext",
+    "target": "esnext",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "types": [
+      "bun-types", // add Bun global
+      "node",
+    ],
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "~@/*": [
+        "src/*"
+      ],
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "./built/**/*" // This is what fixed it!
+  ]
+}
