@@ -1,45 +1,51 @@
 import Logger from "~@/utils/logger.js";
 import {
-  PerspectiveCamera,
-  Scene,
-  Color,
   WebGLRenderer,
-  HemisphereLight,
-  DirectionalLight,
+  PMREMGenerator,
+  HalfFloatType,
 } from "three";
-import Box from "./components/box";
-import Circle from "./components/circle";
-import Star from "./components/star";
-import { Eve } from "./components/eve";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import Game from "./Game";
 const logger = new Logger(import.meta.url);
 const rootElement = document.getElementById("app");
-const game = new Game();
-const { camera, scene } = game;
-
 // initialize renderer
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
+
+// initialize game
+const game = new Game(renderer);
+const { camera, scene } = game;
+const assetPath = "src/assets/";
+
+// loading environment
+// await setEnvironment(renderer);
 // finishing
 rootElement.replaceWith(renderer.domElement);
-logger.log("rootElement", rootElement, window, document);
+// logger.log("rootElement", rootElement, window, document);
 // initialize control
 const controls = new OrbitControls(camera, renderer.domElement);
 // controls.update()
 const button = document.getElementById("playBtn");
-button.addEventListener("click", function() {
+button.addEventListener("click", function () {
   this.style.display = "none";
   game.startGame();
 });
-game.render();
+// game.render();
+async function setEnvironment(renderer: WebGLRenderer) {
+  const loader = new RGBELoader().setDataType(HalfFloatType).setPath(assetPath);
+  if (!renderer) return;
+  const pmremGenerator = new PMREMGenerator(renderer);
+  pmremGenerator.compileEquirectangularShader();
+
+  const texture = await loader.loadAsync("hdr/venice_sunset_1k.hdr");
+  const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+  pmremGenerator.dispose();
+  scene.environment = envMap;
+}
 function loopMethod() {
   game.loop();
   renderer.render(scene, camera);
-  // box.render()
-  // circle.render();
-  // star.render();
-  // eve.loop();
 }
 function resize() {
   renderer.setSize(window.innerWidth, window.innerHeight);

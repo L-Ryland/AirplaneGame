@@ -1,14 +1,23 @@
 import { Group, Object3D, Scene, Vector3 } from "three";
-import { fill, random, forEach, some } from "lodash";
+import { fill, random, forEach, some, remove, last } from "lodash";
 import GLTFComponent from "~@/utils/GLTFComponent";
 import Logger from "~@/utils/logger";
 import Game from "~@/Game";
+import { Explosion } from "./Explosion";
 
-export default class Obstacles extends GLTFComponent{
+export default class Obstacles extends GLTFComponent {
   #logger = new Logger(import.meta.url);
-  constructor(game: Game) { 
+  #bomb: Object3D;
+  #star: Object3D;
+  #explosions: Explosion[] = [];
+  constructor(game: Game) {
     super("");
     this.assetPath = `${this.assetPath}plane/`;
+  }
+  get position() {
+    const tmpPos = new Vector3();
+    const position = last(this.instance.children).getWorldPosition(tmpPos);
+    return position;
   }
   async load(_scene: Scene) {
     const assetPath = this.assetPath;
@@ -17,24 +26,18 @@ export default class Obstacles extends GLTFComponent{
     star.assetPath = assetPath;
     bomb.assetPath = assetPath;
     // await star.load(_scene);
-    const {children: [bombMesh]} = await bomb.init();
-    const {children: [starMesh]} = await star.init();
+    const bombMesh = await bomb.init();
+    const {
+      children: [starMesh],
+    } = await star.init();
     bombMesh.name = "bomb";
+    this.#bomb = bombMesh;
     // bombMesh.position.y = 7.5;
     // bombMesh.rotation.z = - Math.PI / 2;
     starMesh.name = "star";
+    this.#star = starMesh;
     // const obstacle = this.initObstacle(bombMesh, starMesh);
-    const offset = 30;
-    const obstacleGroup = new Group();
-    forEach(Array(10), (element: Group, index) => {
-      element = this.initObstacle(bombMesh, starMesh);
-      element.position.setZ((index + 0.5) * offset);
-      element.position.setY(random(true));
-      // _scene.add(element);
-      obstacleGroup.add(element);
-    });
-    this.instance = obstacleGroup;
-    _scene.add(obstacleGroup);
+    _scene.add(this.initObstacleGroup());
     // _scene.add(obstacle)
   }
   initObstacle(bomb: Object3D, star: Object3D) {
@@ -43,40 +46,86 @@ export default class Obstacles extends GLTFComponent{
     group[tmpIndex] = star;
     const meshGroup = new Group();
     group.forEach((item, index) => {
-      item.position.setY(index * 1.5);
+      item.position.setY(index * 2.5);
       const cloned = item.clone();
       if (item.name === "bomb") {
         let bombIndex = index > tmpIndex ? index - 1 : index;
         if (bombIndex === 1 || bombIndex === 4) {
-          cloned.rotateZ(- Math.PI / 2);
+          cloned.rotateZ(-Math.PI / 2);
         }
         meshGroup.add(cloned);
       } else meshGroup.add(cloned);
     });
     return meshGroup;
   }
-  
-  checkPlane(planePosition:  Vector3){
+
+  initObstacleGroup(positionZ = 0) {
+    const obstacleGroup = new Group();
+    const offset = 30;
+    const bomb = this.#bomb;
+    const star = this.#star;
+    forEach(Array(3), (element: Group, index) => {
+      element = this.initObstacle(bomb, star);
+      element.position.setZ((index + 0.5) * offset + positionZ);
+      element.position.setY(random(true));
+      // _scene.add(element);
+      obstacleGroup.add(element);
+    });
+    this.instance = obstacleGroup;
+    return obstacleGroup;
+  }
+
+  checkPlane(planePosition: Vector3, game: Game) {
     const obstacles = this.instance.children;
     const logger = this.#logger;
+    const time = this.clock.getElapsedTime();
     const checkCollision = (obstacle: Object3D) => {
       const relativePosZ = Math.abs(obstacle.position.z - planePosition.z);
       // plane has met a set of obstacles
       if (relativePosZ < 2) {
-        logger.log("cross", obstacle)
-        forEach(obstacle.children, item => {
+        some(obstacle.children, (item) => {
           const tmpPos = new Vector3();
           const worldPosition = item.getWorldPosition(tmpPos);
           const dist = tmpPos.distanceToSquared(planePosition);
+          item.rotateY(0.1);
+          if (dist > 2.5 * 2.5) return false;
           if (item.name === "star") {
-            item.rotateY(0.1);
-            logger.log("worldPosition", worldPosition);
-            logger.log("dist", dist);
-            if (dist < 2.5 * 2.5) item.visible = false;
+            if (item.visible) {
+              item.visible = false;
+              game.incScores();
+            }
+            return true;
+          } else {
+            if (!item.getObjectByName("explosion")) {
+              if (item.children[0].visible) {
+                item.children[0].visible = false;
+                const explosion = new Explosion();
+                item.add(explosion.instance.clone());
+                this.#explosions.push(explosion);
+                game.decLives();
+              }
+              return true;
+            }
+            forEach(this.#explosions, (explosion) => explosion.update(time));
           }
-        })
+          return true;
+        });
       }
+    };
+    forEach(obstacles, checkCollision);
+    const relativePosZ = this.position.z - planePosition.z;
+    logger.log("relativePosZ", relativePosZ, this.position.z);
+    if (relativePosZ < 25) {
+      logger.log("addObstacles");
+      game.scene.add(this.initObstacleGroup(this.position.z));
     }
-    forEach(obstacles, checkCollision)
+  }
+  reset() {
+    //todo
+  }
+  removeExplosion(explosion: Explosion) {
+    const explosions = this.#explosions;
+    if (!explosions) return;
+    this.#explosions = remove(explosions, explosion);
   }
 }

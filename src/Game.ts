@@ -7,17 +7,23 @@ import {
   DirectionalLight,
   Clock,
   Vector3,
+  UnsignedByteType,
+  WebGLRenderer,
+  HalfFloatType,
+  PMREMGenerator,
 } from "three";
-import { map, startsWith } from "lodash";
+import { map, startsWith, toSafeInteger, toString } from "lodash";
 import Box from "./components/box";
 import Component from "./utils/Mesh";
 import { Eve } from "./components/eve";
 import Logger from "./utils/logger";
 import Plane from "./components/Plane";
 import Obstacles from "./components/Obstacles";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 
 export default class Game {
   #started = false;
+  #renderer: WebGLRenderer;
   #scene: Scene;
   #camera: PerspectiveCamera;
   #cameraController = new Object3D();
@@ -27,65 +33,93 @@ export default class Game {
   #instances: Component[] = [];
   #logger = new Logger(import.meta.url);
   #plane: Plane;
-  #obstacles: Obstacles
-  constructor() {
+  #obstacles: Obstacles;
+  #spaceKey: boolean = false;
+  #loading: boolean = true;
+  #lives: 3;
+  #scores: 0;
+  constructor(renderer: WebGLRenderer) {
     // setInterval(() => {
     //   this.#logger.log("cameraController", this.#cameraController);
     // }, 3000);
+    this.#renderer = renderer;
+    this.loadCamera();
+    this.setEnvironment(renderer);
+    this.loadScene();
+    this.render();
   }
   get camera(): PerspectiveCamera {
+    return this.#camera;
+  }
+  get scene() {
+    return this.#scene;
+  }
+  get #ambient() {
+    const ambient = new HemisphereLight(0xffffff, 0xbbbbff, 1);
+    ambient.position.set(0.5, 1, 0.25);
+    return ambient;
+  }
+  get #light() {
+    const light = new DirectionalLight();
+    light.position.set(0.2, 1, 1);
+    return light;
+  }
+  get #background() {
+    const bgDir = `${this.#assetPath}/plane/paintedsky/`;
+    const cubeTextureLoader = new CubeTextureLoader()
+      .setPath(bgDir)
+      .load(["px.jpg", "nx.jpg", "py.jpg", "ny.jpg", "pz.jpg", "nz.jpg"]);
+    return cubeTextureLoader;
+  }
+  get objects() {
+    return map(this.#instances, (item) => item.instance);
+  }
+  async setEnvironment(renderer: WebGLRenderer) {
+    const loader = new RGBELoader()
+      .setDataType(HalfFloatType)
+      .setPath(this.#assetPath);
+    const pmremGenerator = new PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+
+
+    const texture = await loader.loadAsync("hdr/venice_sunset_1k.hdr");
+    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+    pmremGenerator.dispose();
+
+    this.scene.environment = envMap;
+  }
+  loadScene() {
+    const scene = new Scene();
+    scene.background = this.#background;
+    const cameraController = this.#cameraController;
+    cameraController.add(this.#camera);
+    scene.add(cameraController);
+    scene.add(this.#ambient);
+    scene.add(this.#light);
+    this.#scene = scene;
+  }
+  loadCamera() {
     const camera = new PerspectiveCamera(
       70,
       window.innerWidth / window.innerHeight,
       0.1,
       100
     );
-    camera.position.set(-4.37, 0, -4.75);
+    camera.position.set(-4.37, 3, -4.75);
     camera.lookAt(0, 3.5, 6);
     this.#camera = camera;
-    return camera;
-  }
-  get scene() {
-    const scene = new Scene();
-    const { ambient, light, background } = this;
-    scene.background = background;
-    const cameraController = this.#cameraController;
-    cameraController.add(this.#camera);
-    scene.add(cameraController);
-    scene.add(ambient);
-    scene.add(light);
-    this.#scene = scene;
-    return scene;
-  }
-  get ambient() {
-    return new HemisphereLight(0xffffff, 0xbbbbff, 0.3);
-  }
-  get light() {
-    const light = new DirectionalLight();
-    light.position.set(0.2, 1, 1);
-    return light;
-  }
-  get background() {
-    const bgDir = `${this.#assetPath}/plane/paintedsky/`;
-    return new CubeTextureLoader()
-      .setPath(bgDir)
-      .load(["px.jpg", "nx.jpg", "py.jpg", "ny.jpg", "pz.jpg", "nz.jpg"]);
-  }
-  get objects() {
-    return map(this.#instances, (item) => item.instance);
   }
   updateCamera() {
     const camera = this.#camera;
     const cameraTarget = this.#cameraTarget;
     const cameraController = this.#cameraController;
-    const plane = this.#plane.instance;
+    const plane = this.#plane;
     cameraController.position.copy(plane.position);
-    // cameraController.position.y = 3;
+    // cameraController.position.y = 0;
+    // cameraTarget.y = 0;
+    cameraController.position.y = 7;
     cameraTarget.copy(plane.position);
     cameraTarget.z += 6;
-    // camera.position.copy(cameraController.position)
-    // camera.position.z += 6
-    // camera.position.copy(cameraTarget)
     camera.lookAt(cameraTarget);
   }
   async render() {
@@ -96,57 +130,80 @@ export default class Game {
     // }
     // const eve = new Eve();
     // await eve.loadEve(this.#scene);
-    const plane = new Plane();
-    this.#plane = plane;
+    const plane = new Plane(this);
     await plane.load(this.#scene);
+    this.#plane = plane;
     const obstacles = new Obstacles(this);
-    this.#obstacles = obstacles;
     await obstacles.load(this.#scene);
+    this.#obstacles = obstacles;
+    this.bindEvent();
+    this.reset();
+    this.#loading = false;
     // if (eve.isObject3D) this.#instances.push(eve);
+  }
+  loop() {
+    if (this.#loading) return;
+    this.updateInfo();
+    const logger = this.#logger;
+    const plane = this.#plane;
+    const obstacles = this.#obstacles;
+    if (!this.#started) plane.beforeStart();
+    else {
+      if (this.#spaceKey) {
+        plane.accelerate();
+      } else {
+        plane.decelerate();
+      }
+      plane.started();
+      obstacles.checkPlane(plane.instance.position, this);
+      this.updateCamera();
+    }
+  }
+  bindEvent() {
     const dispatchEvent = (event: UIEvent) => {
       const type = event.type;
       if (startsWith(type, "key")) {
         const { code } = event as KeyboardEvent;
-        this.#logger.log("code", code)
+        this.#logger.log("code", code);
         if (code !== "Space") return;
-        if (type === "keydown") this.accelerate();
-        if (type === "keyup") this.decelerate();
+        if (type === "keydown") this.#spaceKey = true;
+        if (type === "keyup") this.#spaceKey = false;
       } else {
-        if (type === "mousedown" || type === "touchstart") this.accelerate();
-        if (type === "mouseup" || type === "touchend") this.decelerate();
+        if (type === "mousedown" || type === "touchstart")
+          this.#spaceKey = true;
+        if (type === "mouseup" || type === "touchend") this.#spaceKey = false;
       }
     };
     window.addEventListener("keydown", dispatchEvent);
     window.addEventListener("keyup", dispatchEvent);
-    // window.addEventListener("mousedown", dispatchEvent);
-    // window.addEventListener("mouseup", dispatchEvent);
-    // window.addEventListener("touchstart", dispatchEvent);
-    // window.addEventListener("touchend", dispatchEvent);
-  }
-  loop() {
-    const logger = this.#logger;
-    const time = this.#clock.getElapsedTime();
-    const plane = this.#plane;
-    const obstacles = this.#obstacles;
-    if (!this.#started) plane.beforeStart(time);
-    else {
-      plane.started(time);
-      obstacles.checkPlane(plane.instance.position);
-      this.updateCamera();
-    }
+    window.addEventListener("mousedown", dispatchEvent);
+    window.addEventListener("mouseup", dispatchEvent);
+    window.addEventListener("touchstart", dispatchEvent);
+    window.addEventListener("touchend", dispatchEvent);
   }
   startGame() {
+    this.#plane.reset();
+    this.#obstacles.reset();
     this.#started = true;
   }
-  accelerate() {
-    this.#logger.log("accelerate");
-    const plane = this.#plane;
-    plane.velocity.y += 0.1;
+  updateInfo() {
+    const lifeNode = document.getElementById("life");
+    const scoreNode = document.getElementById("score");
+    const lives = toString(this.#lives);
+    const scores = toString(this.#scores);
+    if (lifeNode.innerText !== lives) {
+      lifeNode.innerHTML = lives;
+    }
+    if (scoreNode.innerText !== scores) scoreNode.innerHTML = scores;
   }
-  decelerate() {
-    this.#logger.log("decelerate");
-    const plane = this.#plane;
-    plane.velocity.y = 0;
-    plane.velocity.y -= 0.1;
+  reset() {
+    this.#lives = 3;
+    this.#scores = 0;
+  }
+  decLives() {
+    this.#lives--;
+  }
+  incScores() {
+    this.#scores++;
   }
 }

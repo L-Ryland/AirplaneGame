@@ -1,4 +1,4 @@
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import Component from "./Mesh";
 import {
   AnimationAction,
@@ -7,8 +7,9 @@ import {
   Clock,
   Object3D,
   Scene,
+  Vector3,
 } from "three";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { LoadingBar } from "~@/components/LoadingBar";
 import Logger from "./logger";
 
@@ -35,6 +36,11 @@ export default class GLTFComponent extends Component {
   }
   get clock() {
     return this.#clock;
+  }
+  get position() {
+    const tmpPos = new Vector3();
+    const worldPosition = this.instance.getWorldPosition(tmpPos);
+    return worldPosition;
   }
   async load(_scene: Scene) {
     const mesh = await this.init();

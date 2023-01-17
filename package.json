@@ -13,6 +13,7 @@
   "devDependencies": {
     "@types/lodash": "^4.14.191",
     "@types/three": "^0.147.1",
+    "tailwindcss": "^3.2.4",
     "typescript": "latest"
   },
   "dependencies": {
