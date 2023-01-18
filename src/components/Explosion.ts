@@ -9,6 +9,7 @@ import {
 import { noise } from "../libs/noise";
 import { Tween } from "../libs/Toon3D.js";
 import Obstacles from "./Obstacles";
+import Logger from "~@/utils/logger";
 class Explosion {
   static #vshader = `
 #include <noise>
@@ -65,14 +66,15 @@ void main() {
   gl_FragColor = vec4( color.rgb, u_opacity );
 }
 `;
-  assetPath = "src/assets/";
+  #logger = new Logger(import.meta.url);
+  #assetPath = "src/assets/";
   uniforms = {
     u_time: { value: 0.0 },
     u_mouse: { value: { x: 0.0, y: 0.0 } },
     u_opacity: { value: 0.6 },
     u_resolution: { value: { x: 0, y: 0 } },
     u_tex: {
-      value: new TextureLoader().load(`${this.assetPath}plane/explosion.png`),
+      value: new TextureLoader().load(`${this.#assetPath}plane/explosion.png`),
     },
   };
   ball: Mesh;
@@ -80,7 +82,7 @@ void main() {
   #active: boolean;
   obstacles: Obstacles;
   instance: Object3D;
-  constructor() {
+  constructor(obstacles: Obstacles) {
   // constructor(parent: Object3D, obstacles: Obstacles) {
     const geometry = new IcosahedronGeometry(20, 4);
 
@@ -120,10 +122,13 @@ void main() {
 
   onComplete() {
     const ball = this.ball;
+    const instance = this.instance;
     const geometry = this.ball.geometry;
     const material = this.ball.material as ShaderMaterial;
     const obstacles = this.obstacles;
     // ball.parent.remove(this.ball);
+    this.#logger.log("instance", instance);
+    instance.parent.remove(instance);
     // ball.clear();
     this.tweens = [];
     this.#active = false;

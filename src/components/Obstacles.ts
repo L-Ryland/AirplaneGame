@@ -10,6 +10,8 @@ export default class Obstacles extends GLTFComponent {
   #bomb: Object3D;
   #star: Object3D;
   #explosions: Explosion[] = [];
+  #newInstance: Object3D
+  
   constructor(game: Game) {
     super("");
     this.assetPath = `${this.assetPath}plane/`;
@@ -38,6 +40,8 @@ export default class Obstacles extends GLTFComponent {
     this.#star = starMesh;
     // const obstacle = this.initObstacle(bombMesh, starMesh);
     _scene.add(this.initObstacleGroup());
+    this.instance = this.#newInstance;
+    this.#newInstance = null;
     // _scene.add(obstacle)
   }
   initObstacle(bomb: Object3D, star: Object3D) {
@@ -71,7 +75,8 @@ export default class Obstacles extends GLTFComponent {
       // _scene.add(element);
       obstacleGroup.add(element);
     });
-    this.instance = obstacleGroup;
+    this.#newInstance = obstacleGroup;
+    // if (!this.instance) this.instance = this.#newInstance;
     return obstacleGroup;
   }
 
@@ -99,8 +104,8 @@ export default class Obstacles extends GLTFComponent {
             if (!item.getObjectByName("explosion")) {
               if (item.children[0].visible) {
                 item.children[0].visible = false;
-                const explosion = new Explosion();
-                item.add(explosion.instance.clone());
+                const explosion = new Explosion(this);
+                item.add(explosion.instance);
                 this.#explosions.push(explosion);
                 game.decLives();
               }
@@ -114,8 +119,10 @@ export default class Obstacles extends GLTFComponent {
     };
     forEach(obstacles, checkCollision);
     const relativePosZ = this.position.z - planePosition.z;
-    logger.log("relativePosZ", relativePosZ, this.position.z);
-    if (relativePosZ < 25) {
+    if (relativePosZ < 0 && this.#newInstance) {
+      this.instance = this.#newInstance;
+      this.#newInstance = null;
+    } else if (relativePosZ < 25 && !this.#newInstance) {
       logger.log("addObstacles");
       game.scene.add(this.initObstacleGroup(this.position.z));
     }

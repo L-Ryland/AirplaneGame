@@ -12,6 +12,7 @@ import {
   HalfFloatType,
   PMREMGenerator,
 } from "three";
+import $ from "jquery";
 import { map, startsWith, toSafeInteger, toString } from "lodash";
 import Box from "./components/box";
 import Component from "./utils/Mesh";
@@ -186,15 +187,17 @@ export default class Game {
     this.#obstacles.reset();
     this.#started = true;
   }
+  gameOver() {
+    this.#logger.log("game is over")
+  }
   updateInfo() {
-    const lifeNode = document.getElementById("life");
-    const scoreNode = document.getElementById("score");
-    const lives = toString(this.#lives);
-    const scores = toString(this.#scores);
-    if (lifeNode.innerText !== lives) {
-      lifeNode.innerHTML = lives;
-    }
-    if (scoreNode.innerText !== scores) scoreNode.innerHTML = scores;
+    const lives = this.#lives;
+    const scores = this.#scores;
+    $("#life").text((_, text) => {
+      // if (text !== lives) return lives
+      return toSafeInteger(text) === lives ? undefined : lives;
+    });
+    $("#score").text((_, text) => toSafeInteger(text) === scores ? undefined : scores)
   }
   reset() {
     this.#lives = 3;

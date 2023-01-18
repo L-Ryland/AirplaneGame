@@ -3,7 +3,7 @@ import { parse } from "path";
 
 export default class Logger {
   #fileName: string
-  constructor(path = import.meta.url) {
+  constructor(path?: string) {
     this.#fileName = parse(path).name || path;
   }
   log(...args: any[]) {

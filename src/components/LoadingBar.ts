@@ -1,7 +1,8 @@
+import $ from "jquery";
 class LoadingBar {
   static #loadingBar: LoadingBar;
-  #domElement: HTMLDivElement;
-  #progressBar: HTMLDivElement;
+  #domElement: JQuery<HTMLDivElement>;
+  #progressBar: JQuery<HTMLDivElement>;
   assets: {
     [key: string]: {
       loaded: number;
@@ -17,35 +18,45 @@ class LoadingBar {
     // }
   }
   #init() {
-    this.#domElement = document.createElement("div");
-    this.#domElement.style.position = "fixed";
-    this.#domElement.style.top = "0";
-    this.#domElement.style.left = "0";
-    this.#domElement.style.width = "100%";
-    this.#domElement.style.height = "100%";
-    this.#domElement.style.background = "#000";
-    this.#domElement.style.opacity = "0.7";
-    this.#domElement.style.display = "flex";
-    this.#domElement.style.alignItems = "center";
-    this.#domElement.style.justifyContent = "center";
-    this.#domElement.style.zIndex = "1111";
-    const barBase = document.createElement("div");
-    barBase.style.background = "#aaa";
-    barBase.style.width = "50%";
-    barBase.style.minWidth = "250px";
-    barBase.style.borderRadius = "10px";
-    barBase.style.height = "15px";
-    this.#domElement.appendChild(barBase);
-    const bar = document.createElement("div");
-    bar.style.background = "#22a";
-    bar.style.width = "50%";
-    bar.style.borderRadius = "10px";
-    bar.style.height = "100%";
-    bar.style.width = "0";
-    barBase.appendChild(bar);
+    const loadingBar = $(`<div></div`).css({
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "#000",
+      opacity: 0.7,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1111,
+    }) as JQuery<HTMLDivElement>;
+    const barBase = $(`<div></div>`).css({
+      backgroundColor: "#aaa",
+      width: "50%",
+      minWidth: 250,
+      borderRadius: 10,
+      height: 15,
+    });
+    const bar = $(`<div></div>`).css({
+      backgroundColor: "#22a",
+      width: "50%",
+      borderRadius: 10,
+      height: "100%",
+    }) as JQuery<HTMLDivElement>
+    // const bar = document.createElement("div");
+    // bar.style.background = "#22a";
+    // bar.style.width = "50%";
+    // bar.style.borderRadius = "10px";
+    // bar.style.height = "100%";
+    // bar.style.width = "0";
+    // barBase.appendChild(bar);
+    bar.appendTo(barBase);
+    barBase.appendTo(loadingBar);
     this.#progressBar = bar;
-
-    document.body.appendChild(this.#domElement);
+    this.#domElement = loadingBar;
+    // document.body.appendChild(this.#domElement);
+    loadingBar.appendTo("body");
   }
   static get instance() {
     if (!this.#loadingBar) {
@@ -54,20 +65,21 @@ class LoadingBar {
     }
     return this.#loadingBar;
   }
-  set progress(delta) {
+  set progress(delta: number) {
     const percent = delta * 100;
-    this.#progressBar.style.width = `${percent}%`;
+    // this.#progressBar.style.width = `${percent}%`;
+    this.#progressBar.css("width", `${percent}%`);
   }
 
-  set visible(value) {
+  set visible(value: boolean) {
     if (value) {
-      this.#domElement.style.display = "flex";
+      this.#domElement.css({display: "flex"});
     } else {
-      this.#domElement.style.display = "none";
+      this.#domElement.css({display: "none"});
     }
   }
 
-  update(assetName, loaded, total) {
+  update(assetName: string, loaded: number, total: number) {
     if (this.assets === undefined) this.assets = {};
 
     if (this.assets[assetName] === undefined) {

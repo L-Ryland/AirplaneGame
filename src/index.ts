@@ -4,11 +4,12 @@ import {
   PMREMGenerator,
   HalfFloatType,
 } from "three";
+import $ from "jquery";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import Game from "./Game";
 const logger = new Logger(import.meta.url);
-const rootElement = document.getElementById("app");
+// const rootElement = document.getElementById("app");
+const rootElement = $("#app");
 // initialize renderer
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -26,23 +27,11 @@ rootElement.replaceWith(renderer.domElement);
 // initialize control
 const controls = new OrbitControls(camera, renderer.domElement);
 // controls.update()
-const button = document.getElementById("playBtn");
-button.addEventListener("click", function () {
+$("#playBtn").on("click", function () {
   this.style.display = "none";
   game.startGame();
-});
-// game.render();
-async function setEnvironment(renderer: WebGLRenderer) {
-  const loader = new RGBELoader().setDataType(HalfFloatType).setPath(assetPath);
-  if (!renderer) return;
-  const pmremGenerator = new PMREMGenerator(renderer);
-  pmremGenerator.compileEquirectangularShader();
+})
 
-  const texture = await loader.loadAsync("hdr/venice_sunset_1k.hdr");
-  const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-  pmremGenerator.dispose();
-  scene.environment = envMap;
-}
 function loopMethod() {
   game.loop();
   renderer.render(scene, camera);

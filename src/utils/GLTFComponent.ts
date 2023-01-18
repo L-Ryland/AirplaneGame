@@ -14,7 +14,7 @@ import { LoadingBar } from "~@/components/LoadingBar";
 import Logger from "./logger";
 
 export default class GLTFComponent extends Component {
-  #logger = new Logger(import.meta.url);
+  #logger = new Logger(GLTFComponent.name);
   #assetPath = "src/assets/";
   #dracoLibPath =
     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/libs/draco/";
