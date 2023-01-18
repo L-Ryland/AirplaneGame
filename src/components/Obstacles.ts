@@ -18,7 +18,7 @@ export default class Obstacles extends GLTFComponent {
     setInterval(() => {
       // this.logger.log("newInstance", this.#newInstance);
       // this.logger.log("instance", this.instance);
-      this.logger.log("explosions", this.#explosions);
+      // this.logger.log("explosions", this.#explosions);
     }, 3000);
   }
   get position() {
@@ -88,7 +88,7 @@ export default class Obstacles extends GLTFComponent {
   checkPlane(planePosition: Vector3, game: Game) {
     const obstacles = this.instance.children;
     const logger = this.logger;
-    const time = this.clock.getElapsedTime();
+    const delta = this.clock.getDelta();
     const checkCollision = (obstacle: Object3D) => {
       const relativePosZ = Math.abs(obstacle.position.z - planePosition.z);
       // plane has met a set of obstacles
@@ -122,7 +122,7 @@ export default class Obstacles extends GLTFComponent {
       }
     };
     forEach(obstacles, checkCollision);
-    forEach(this.#explosions, (explosion) => explosion.update(time));
+    forEach(this.#explosions, (explosion) => explosion.update(delta));
     const relativePosZ = this.position.z - planePosition.z;
     if (relativePosZ < 0 && this.#newInstance) {
       logger.log("replaceInstance");

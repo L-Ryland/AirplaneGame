@@ -10,6 +10,7 @@ import { noise } from "../libs/noise";
 import { Tween } from "../libs/Toon3D.js";
 import Obstacles from "./Obstacles";
 import Logger from "~@/utils/logger";
+
 class Explosion {
   static #vshader = `
 #include <noise>
@@ -143,6 +144,8 @@ void main() {
     const scale = this.ball.scale;
 
     u_time.value += time;
+    const logger = new Logger(this.constructor.name);
+    logger.log("time",u_time);
     u_opacity.value = material.opacity;
 
     if (tweens.length < 2) {
