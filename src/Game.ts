@@ -175,7 +175,6 @@ export default class Game {
       const type = event.type;
       if (startsWith(type, "key")) {
         const { code } = event as KeyboardEvent;
-        this.#logger.log("code", code);
         if (code !== "Space") return;
         if (type === "keydown") this.#spaceKey = true;
         if (type === "keyup") this.#spaceKey = false;

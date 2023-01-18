@@ -12,4 +12,7 @@ export default class Logger {
   error(...args: any[]) {
     console.error(`[${this.#fileName}]`, ...args);
   }
+  warn(...args: any[]) {
+    console.warn(`[${this.#fileName}]`, ...args);
+  }
 }

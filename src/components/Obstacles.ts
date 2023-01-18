@@ -110,7 +110,6 @@ export default class Obstacles extends GLTFComponent {
             if (!hasExplosion && item.children?.[0].visible) {
               item.children[0].visible = false;
               game.decLives();
-              logger.log("newExplosion", hasExplosion);
               const explosion = new Explosion(this);
               item.add(explosion.instance);
               this.#explosions.push(explosion);
@@ -125,12 +124,10 @@ export default class Obstacles extends GLTFComponent {
     forEach(this.#explosions, (explosion) => explosion.update(delta));
     const relativePosZ = this.position.z - planePosition.z;
     if (relativePosZ < 0 && this.#newInstance) {
-      logger.log("replaceInstance");
       game.scene.remove(this.instance);
       this.instance = this.#newInstance;
       this.#newInstance = null;
     } else if (relativePosZ < 25 && !this.#newInstance) {
-      logger.log("addObstacles");
       game.scene.add(this.initObstacleGroup(this.position.z));
     }
   }

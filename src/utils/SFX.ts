@@ -13,7 +13,7 @@ export default class SFX {
   #assetPath: string;
   constructor(camera: Camera, assetPath: string) {
     if (SFX.#sfxTool) {
-      this.#logger.log("SFX is already initialized");
+      this.#logger.warn("SFX is already initialized");
       return;
     }
     const listener = new AudioListener();
@@ -24,7 +24,6 @@ export default class SFX {
     SFX.#sfxTool = this;
   }
   async load(name: string, {loop = false, volume = 0.5}: SoundConfig, obj?: Object) {
-    this.#logger.log("assetPath", this.#assetPath)
     const listener = this.#listener;
     const sound = obj ? new PositionalAudio(listener) : new Audio(listener);
     this.#sounds[name] = sound;

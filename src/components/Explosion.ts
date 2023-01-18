@@ -120,7 +120,6 @@ void main() {
 
   onComplete() {
     const logger = new Logger(this.constructor.name);
-    logger.log("onComplete");
     const ball = this.ball;
     const instance = this.instance;
     const geometry = this.ball.geometry;
@@ -145,7 +144,6 @@ void main() {
 
     u_time.value += time;
     const logger = new Logger(this.constructor.name);
-    logger.log("time",u_time);
     u_opacity.value = material.opacity;
 
     if (tweens.length < 2) {

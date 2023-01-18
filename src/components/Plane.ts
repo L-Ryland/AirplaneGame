@@ -20,10 +20,10 @@ export default class Plane extends GLTFComponent {
     super("microplane.glb");
     this.assetPath = `${this.assetPath}plane/`;
     this.#Game = game;
-    setInterval(() => {
-      if (this.instance)
-        this.logger.log("plane position", this.instance.position);
-    }, 3000);
+    // setInterval(() => {
+    //   if (this.instance)
+    //     this.logger.log("plane position", this.instance.position);
+    // }, 3000);
   }
   set velocity(value) {
     this.refreshVelocity(value);
