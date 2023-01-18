@@ -183,12 +183,14 @@ export default class Game {
     window.addEventListener("touchend", dispatchEvent);
   }
   startGame() {
-    this.#plane.reset();
-    this.#obstacles.reset();
+    this.reset();
     this.#started = true;
   }
   gameOver() {
     this.#logger.log("game is over")
+    this.reset();
+    $("#gameover").removeClass("hidden");
+    $("#playBtn").removeClass("hidden");
   }
   updateInfo() {
     const lives = this.#lives;
@@ -200,10 +202,16 @@ export default class Game {
     $("#score").text((_, text) => toSafeInteger(text) === scores ? undefined : scores)
   }
   reset() {
+    this.#plane.reset();
+    this.#obstacles.reset();
+    this.#started = false;
     this.#lives = 3;
     this.#scores = 0;
   }
   decLives() {
+    if (this.#lives < 0) {
+      return this.gameOver();
+    }
     this.#lives--;
   }
   incScores() {

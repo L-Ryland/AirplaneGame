@@ -6,14 +6,14 @@ import Game from "~@/Game";
 import { Explosion } from "./Explosion";
 
 export default class Obstacles extends GLTFComponent {
-  #logger = new Logger(import.meta.url);
+  // #logger = new Logger(import.meta.url);
   #bomb: Object3D;
   #star: Object3D;
   #explosions: Explosion[] = [];
   #newInstance: Object3D
   
   constructor(game: Game) {
-    super("");
+    super();
     this.assetPath = `${this.assetPath}plane/`;
   }
   get position() {
@@ -82,7 +82,7 @@ export default class Obstacles extends GLTFComponent {
 
   checkPlane(planePosition: Vector3, game: Game) {
     const obstacles = this.instance.children;
-    const logger = this.#logger;
+    const logger = this.logger;
     const time = this.clock.getElapsedTime();
     const checkCollision = (obstacle: Object3D) => {
       const relativePosZ = Math.abs(obstacle.position.z - planePosition.z);

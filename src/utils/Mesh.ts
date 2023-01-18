@@ -7,7 +7,9 @@ interface MeshConfig {
 }
 export default class Component {
   #instance: Object3D;
+  #logger: Logger;
   constructor(config?: MeshConfig) {
+    this.#logger = new Logger(this.constructor.name);
     if (config) {
       const {geometry, material} = config;
       this.instance = new BaseMesh(geometry, material);
@@ -15,6 +17,9 @@ export default class Component {
     // this.#instance = this;
   }
   update(time?: number) { }
+  get logger() {
+    return this.#logger;
+  }
   get instance() {
     return this.#instance;
   }

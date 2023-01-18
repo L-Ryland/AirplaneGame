@@ -8,7 +8,6 @@ import Logger from "~@/utils/logger";
 import Game from "~@/Game";
 
 export default class Plane extends GLTFComponent {
-  #logger = new Logger(import.meta.url);
   #velocity = new Vector3(0, 0, 0);
   #Game = null;
   #tmpPos = new Vector3();
@@ -23,7 +22,7 @@ export default class Plane extends GLTFComponent {
     this.#Game = game;
     setInterval(() => {
       if (this.instance)
-        this.#logger.log("plane position", this.instance.position);
+        this.logger.log("plane position", this.instance.position);
     }, 3000);
   }
   set velocity(value) {

@@ -28,7 +28,10 @@ rootElement.replaceWith(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 // controls.update()
 $("#playBtn").on("click", function () {
-  this.style.display = "none";
+  // this.style.display = "none";
+  // logger.log("this", this, $(this))
+  $(this).removeClass("block").addClass("hidden");
+  $("#instructions").addClass("hidden");
   game.startGame();
 })
 

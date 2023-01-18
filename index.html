@@ -7,26 +7,47 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>ThreeJS Playground</title>
     <style type="text/tailwindcss">
-      #playBtn {
-        position: absolute;
-        width: 180px;
-        height: 100px;
-        font-family: "RocknRoll One", sans-serif;
-        font-size: 40px;
-        bottom: 100px;
-        border-radius: 20px;
-        background-color: darkblue;
-        color: white;
-        left: 50%;
-        transform: translateX(-50%);
-        cursor: pointer;
-      }
       @layer utilities {
+        body {
+          @apply w-screen h-screen;
+          font-family: "RocknRoll One", sans-serif;
+        }
         .info {
           @apply absolute top-0 flex;
           @apply w-screen;
           @apply text-black text-5xl;
           @apply justify-between;
+        }
+        .hint {
+          /* @apply hidden; */
+          @apply absolute inset-x-0 inset-y-[50%] object-center z-50;
+          @apply w-max h-max m-auto;
+        }
+        #playBtn {
+          /* position: absolute; */
+          /* @apply block; */
+          @apply m-auto;
+          width: 180px;
+          height: 100px;
+          font-size: 40px;
+          bottom: 100px;
+          border-radius: 20px;
+          background-color: darkblue;
+          color: white;
+          /* left: 50%; */
+          /* transform: translateX(-50%); */
+          cursor: pointer;
+        }
+        #instructions,#gameover {
+          @apply border-4 border-indigo-500 rounded-2xl;
+          @apply p-3 m-1;
+          @apply text-3xl text-center;
+        }
+        #instructions {
+          @apply bg-cyan-500/50;
+        }
+        #gameover {
+          @apply bg-amber-500/50;
         }
       }
     </style>
@@ -43,7 +64,14 @@
         <p id="score">0</p>
       </div>
     </div>
-    <button id="playBtn">Play</button>
+    <div class="hint">
+      <p id="instructions">
+        Collect stars. <br />Avoid bombs. <br />Spacebar, mousedown or touch to
+        climb
+      </p>
+      <p id="gameover" class="hidden">Game over</p>
+      <button id="playBtn" class="block">Play</button>
+    </div>
     <script type="module" src="./src/index.ts"></script>
     <!-- <script src="./node_modules/three/examples/jsm/libs/draco/draco_wasm_wrapper.js"></script> -->
   </body>

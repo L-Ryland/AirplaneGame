@@ -43,19 +43,11 @@ class LoadingBar {
       width: "50%",
       borderRadius: 10,
       height: "100%",
-    }) as JQuery<HTMLDivElement>
-    // const bar = document.createElement("div");
-    // bar.style.background = "#22a";
-    // bar.style.width = "50%";
-    // bar.style.borderRadius = "10px";
-    // bar.style.height = "100%";
-    // bar.style.width = "0";
-    // barBase.appendChild(bar);
+    }) as JQuery<HTMLDivElement>;
     bar.appendTo(barBase);
     barBase.appendTo(loadingBar);
     this.#progressBar = bar;
     this.#domElement = loadingBar;
-    // document.body.appendChild(this.#domElement);
     loadingBar.appendTo("body");
   }
   static get instance() {
@@ -67,15 +59,14 @@ class LoadingBar {
   }
   set progress(delta: number) {
     const percent = delta * 100;
-    // this.#progressBar.style.width = `${percent}%`;
     this.#progressBar.css("width", `${percent}%`);
   }
 
   set visible(value: boolean) {
     if (value) {
-      this.#domElement.css({display: "flex"});
+      this.#domElement.css({ display: "flex" });
     } else {
-      this.#domElement.css({display: "none"});
+      this.#domElement.css({ display: "none" });
     }
   }
 

@@ -14,19 +14,18 @@ import { LoadingBar } from "~@/components/LoadingBar";
 import Logger from "./logger";
 
 export default class GLTFComponent extends Component {
-  #logger = new Logger(GLTFComponent.name);
+  #fileName: string;
   #assetPath = "src/assets/";
   #dracoLibPath =
     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/libs/draco/";
-  #fileName: string;
   #clock = new Clock();
   #mixer: AnimationMixer;
   #currAction: AnimationAction;
   #currIndex: number;
   #animations: AnimationClip[];
-  constructor(fileName: string) {
+  constructor(fileName?: string) {
     super();
-    this.#fileName = fileName;
+    this.#fileName = fileName || this.constructor.name;
   }
   get assetPath() {
     return this.#assetPath;
@@ -60,11 +59,9 @@ export default class GLTFComponent extends Component {
       ({ loaded, total }) => loadingBar.update(this.#fileName, loaded, total)
     );
     loadingBar.visible = false;
-    this.#logger.log("scene", scene);
     this.instance = scene;
     this.#mixer = new AnimationMixer(scene);
     this.#animations = animations;
-    this.#logger.log("animations", animations)
     return scene;
   }
   update(time?: number) {
