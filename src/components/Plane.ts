@@ -3,7 +3,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { isNaN } from "lodash";
 import GLTFComponent from "~@/utils/GLTFComponent";
-import Component from "~@/utils/Mesh";
+import Component from "~@/utils/Component";
 import Logger from "~@/utils/logger";
 import Game from "~@/Game";
 
@@ -89,7 +89,6 @@ export default class Plane extends GLTFComponent {
     const plane = this.instance;
     plane.position.set(0,10,0);
     this.velocity.set(0,0,0.1);
-    
   }
   accelerate() {
     // this.#logger.log("accelerate");

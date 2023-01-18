@@ -1,5 +1,5 @@
 import { Group, Object3D, Scene, Vector3 } from "three";
-import { fill, random, forEach, some, remove, last } from "lodash";
+import { fill, random, forEach, some, remove, last, isNaN } from "lodash";
 import GLTFComponent from "~@/utils/GLTFComponent";
 import Logger from "~@/utils/logger";
 import Game from "~@/Game";
@@ -10,11 +10,16 @@ export default class Obstacles extends GLTFComponent {
   #bomb: Object3D;
   #star: Object3D;
   #explosions: Explosion[] = [];
-  #newInstance: Object3D
-  
-  constructor(game: Game) {
+  #newInstance: Object3D;
+  #collisionObstacle: Object3D;
+  constructor() {
     super();
     this.assetPath = `${this.assetPath}plane/`;
+    setInterval(() => {
+      // this.logger.log("newInstance", this.#newInstance);
+      // this.logger.log("instance", this.instance);
+      this.logger.log("explosions", this.#explosions);
+    }, 3000);
   }
   get position() {
     const tmpPos = new Vector3();
@@ -101,25 +106,27 @@ export default class Obstacles extends GLTFComponent {
             }
             return true;
           } else {
-            if (!item.getObjectByName("explosion")) {
-              if (item.children[0].visible) {
-                item.children[0].visible = false;
-                const explosion = new Explosion(this);
-                item.add(explosion.instance);
-                this.#explosions.push(explosion);
-                game.decLives();
-              }
+            const hasExplosion = !!item.getObjectByName("explosion");
+            if (!hasExplosion && item.children?.[0].visible) {
+              item.children[0].visible = false;
+              game.decLives();
+              logger.log("newExplosion", hasExplosion);
+              const explosion = new Explosion(this);
+              item.add(explosion.instance);
+              this.#explosions.push(explosion);
               return true;
             }
-            forEach(this.#explosions, (explosion) => explosion.update(time));
+            return true;
           }
-          return true;
         });
       }
     };
     forEach(obstacles, checkCollision);
+    forEach(this.#explosions, (explosion) => explosion.update(time));
     const relativePosZ = this.position.z - planePosition.z;
     if (relativePosZ < 0 && this.#newInstance) {
+      logger.log("replaceInstance");
+      game.scene.remove(this.instance);
       this.instance = this.#newInstance;
       this.#newInstance = null;
     } else if (relativePosZ < 25 && !this.#newInstance) {
@@ -127,8 +134,14 @@ export default class Obstacles extends GLTFComponent {
       game.scene.add(this.initObstacleGroup(this.position.z));
     }
   }
-  reset() {
+  reset(scene: Scene) {
     //todo
+    if (this.#newInstance) scene.remove(this.#newInstance);
+    if (this.instance) scene.remove(this.instance);
+    forEach(this.#explosions, (explosion) => explosion.onComplete());
+    scene.add(this.initObstacleGroup());
+    this.instance = this.#newInstance;
+    this.#newInstance = null;
   }
   removeExplosion(explosion: Explosion) {
     const explosions = this.#explosions;

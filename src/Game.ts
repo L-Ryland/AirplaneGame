@@ -15,18 +15,20 @@ import {
 import $ from "jquery";
 import { map, startsWith, toSafeInteger, toString } from "lodash";
 import Box from "./components/box";
-import Component from "./utils/Mesh";
+import Component from "./utils/Component";
 import { Eve } from "./components/eve";
 import Logger from "./utils/logger";
 import Plane from "./components/Plane";
 import Obstacles from "./components/Obstacles";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
+import SFX from "./utils/SFX";
 
 export default class Game {
   #started = false;
   #renderer: WebGLRenderer;
   #scene: Scene;
   #camera: PerspectiveCamera;
+  #sfxTool: SFX;
   #cameraController = new Object3D();
   #cameraTarget = new Vector3(0, 0, 6);
   #clock = new Clock();
@@ -47,6 +49,8 @@ export default class Game {
     this.loadCamera();
     this.setEnvironment(renderer);
     this.loadScene();
+    this.loadSFX();
+    this.bindEvent();
     this.render();
   }
   get camera(): PerspectiveCamera {
@@ -82,7 +86,6 @@ export default class Game {
     const pmremGenerator = new PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
 
-
     const texture = await loader.loadAsync("hdr/venice_sunset_1k.hdr");
     const envMap = pmremGenerator.fromEquirectangular(texture).texture;
     pmremGenerator.dispose();
@@ -110,6 +113,14 @@ export default class Game {
     camera.lookAt(0, 3.5, 6);
     this.#camera = camera;
   }
+  loadSFX() {
+    const sfx = new SFX(this.#camera, `${this.#assetPath}/plane/`);
+    sfx.load("explosion", {});
+    sfx.load("engine", { loop: true, volume: 1 });
+    sfx.load("gliss", {});
+    sfx.load("gameover", {});
+    this.#sfxTool = sfx;
+  }
   updateCamera() {
     const camera = this.#camera;
     const cameraTarget = this.#cameraTarget;
@@ -134,10 +145,9 @@ export default class Game {
     const plane = new Plane(this);
     await plane.load(this.#scene);
     this.#plane = plane;
-    const obstacles = new Obstacles(this);
+    const obstacles = new Obstacles();
     await obstacles.load(this.#scene);
     this.#obstacles = obstacles;
-    this.bindEvent();
     this.reset();
     this.#loading = false;
     // if (eve.isObject3D) this.#instances.push(eve);
@@ -185,12 +195,16 @@ export default class Game {
   startGame() {
     this.reset();
     this.#started = true;
+    this.#sfxTool.stopAll();
+    this.#sfxTool.play("engine");
   }
   gameOver() {
-    this.#logger.log("game is over")
+    this.#logger.log("game is over");
     this.reset();
+    this.#sfxTool.stopAll();
     $("#gameover").removeClass("hidden");
     $("#playBtn").removeClass("hidden");
+    this.#sfxTool.play("gameover");
   }
   updateInfo() {
     const lives = this.#lives;
@@ -199,22 +213,28 @@ export default class Game {
       // if (text !== lives) return lives
       return toSafeInteger(text) === lives ? undefined : lives;
     });
-    $("#score").text((_, text) => toSafeInteger(text) === scores ? undefined : scores)
+    $("#score").text((_, text) =>
+      toSafeInteger(text) === scores ? undefined : scores
+    );
   }
   reset() {
     this.#plane.reset();
-    this.#obstacles.reset();
+    this.#obstacles.reset(this.#scene);
+    this.updateCamera();
     this.#started = false;
     this.#lives = 3;
     this.#scores = 0;
   }
   decLives() {
-    if (this.#lives < 0) {
-      return this.gameOver();
+    if (this.#lives <= 0) {
+      this.gameOver();
+    } else {
+      this.#sfxTool.play("explosion");
+      this.#lives--;
     }
-    this.#lives--;
   }
   incScores() {
+    this.#sfxTool.play("gliss");
     this.#scores++;
   }
 }

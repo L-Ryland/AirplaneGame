@@ -1,5 +1,5 @@
 import { BoxGeometry, MeshStandardMaterial, Scene, WebGLRenderer } from "three";
-import Component from "~@/utils/Mesh";
+import Component from "~@/utils/Component";
 import Logger from "~@/utils/logger";
 
 class Box extends Component {

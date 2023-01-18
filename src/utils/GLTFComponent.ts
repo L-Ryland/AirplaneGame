@@ -1,5 +1,5 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import Component from "./Mesh";
+import Component from "./Component";
 import {
   AnimationAction,
   AnimationClip,
@@ -65,7 +65,7 @@ export default class GLTFComponent extends Component {
     return scene;
   }
   update(time?: number) {
-    const delta = this.#clock.getDelta();
+    const delta = time || this.#clock.getDelta();
     this.#mixer.update(delta);
   }
   animate() {}

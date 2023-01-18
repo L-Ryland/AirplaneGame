@@ -66,7 +66,6 @@ void main() {
   gl_FragColor = vec4( color.rgb, u_opacity );
 }
 `;
-  #logger = new Logger(import.meta.url);
   #assetPath = "src/assets/";
   uniforms = {
     u_time: { value: 0.0 },
@@ -105,30 +104,29 @@ void main() {
     ball.name = "explosion";
     // parent.add(this.ball);
     this.instance = ball;
-
     tweens.push(
       new Tween(
         this.ball.scale,
         "x",
         0.2,
-        1.5,
-        this.onComplete.bind(this),
+        5,
+        () => this.onComplete(),
         "outQuad"
       )
     );
-
     this.#active = true;
   }
 
   onComplete() {
+    const logger = new Logger(this.constructor.name);
+    logger.log("onComplete");
     const ball = this.ball;
     const instance = this.instance;
     const geometry = this.ball.geometry;
     const material = this.ball.material as ShaderMaterial;
     const obstacles = this.obstacles;
     // ball.parent.remove(this.ball);
-    this.#logger.log("instance", instance);
-    instance.parent.remove(instance);
+    instance.parent?.remove(instance);
     // ball.clear();
     this.tweens = [];
     this.#active = false;

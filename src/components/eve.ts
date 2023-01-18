@@ -12,7 +12,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import Logger from "~@/utils/logger";
 import { random } from "lodash";
 import { LoadingBar } from "./LoadingBar";
-import Component from "~@/utils/Mesh";
+import Component from "~@/utils/Component";
 
 export class Eve extends Component {
   #logger: Logger;

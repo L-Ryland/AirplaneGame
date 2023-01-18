@@ -17,10 +17,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 // initialize game
 const game = new Game(renderer);
 const { camera, scene } = game;
-const assetPath = "src/assets/";
 
-// loading environment
-// await setEnvironment(renderer);
 // finishing
 rootElement.replaceWith(renderer.domElement);
 // logger.log("rootElement", rootElement, window, document);
@@ -32,6 +29,7 @@ $("#playBtn").on("click", function () {
   // logger.log("this", this, $(this))
   $(this).removeClass("block").addClass("hidden");
   $("#instructions").addClass("hidden");
+  $("#gameover").addClass("hidden");
   game.startGame();
 })
 
